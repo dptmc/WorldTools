@@ -1,6 +1,7 @@
 package org.waste.of.time.fabric
 
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType.string
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
@@ -62,24 +63,23 @@ object WorldToolsFabric : ClientModInitializer {
     private fun CommandDispatcher<FabricClientCommandSource>.register() {
         register(
             literal("worldtools")
-                .then(literal("capture")
-                    .then(argument("name", string()).executes {
-                        CaptureManager.start(it.getArgument("name", String::class.java))
-                        0
-                    })
-                    .then(literal("start").executes {
-                        CaptureManager.start()
-                        0
-                    })
-                    .then(literal("stop").executes {
-                        CaptureManager.stop()
-                        0
-                    })
-                    .executes {
-                        CaptureManager.toggleCapture()
-                        0
-                    }
+                .then(
+                    literal("capture")
+                        .then(
+                            literal("start")
+                                .executes { CaptureManager.start(); 0 }
+                                .then(
+                                    argument("name", string())
+                                        .executes {CaptureManager.start(it.getArgument("name", String::class.java)); 0 }
+                                )
+                        )
+                        .then(
+                            literal("stop")
+                                .executes { CaptureManager.stop(); 0 }
+                        )
+                        .executes { CaptureManager.toggleCapture(); 0 }
                 )
         )
+
     }
 }
