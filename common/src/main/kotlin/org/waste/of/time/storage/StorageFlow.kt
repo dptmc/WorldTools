@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import net.minecraft.util.path.SymlinkValidationException
+import org.waste.of.time.WorldTools
 import org.waste.of.time.WorldTools.LOG
 import org.waste.of.time.WorldTools.mc
 import org.waste.of.time.manager.CaptureManager
@@ -20,18 +21,17 @@ import kotlin.time.Duration
 import kotlin.time.measureTime
 
 object StorageFlow {
-    private const val MAX_BUFFER_SIZE = 1000
+    private const val MAX_BUFFER_SIZE = 10000
     var lastStoredTimestamp: Long = 0
     var lastStored: Storeable? = null
     var lastStoredTimeNeeded: Duration = Duration.ZERO
 
-    private val sharedFlow = MutableSharedFlow<Storeable>(
-        extraBufferCapacity = MAX_BUFFER_SIZE,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
+    private val sharedFlow = MutableSharedFlow<Storeable>(extraBufferCapacity = MAX_BUFFER_SIZE)
 
     fun emit(storeable: Storeable) {
-        sharedFlow.tryEmit(storeable)
+        if (sharedFlow.tryEmit(storeable)) return
+
+        LOG.warn("Buffer overflow: Unable to emit \"${storeable.formattedInfo.string}\" to storage flow")
     }
 
     fun launch(levelName: String) = CoroutineScope(Dispatchers.IO).launch {
