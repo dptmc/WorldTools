@@ -121,7 +121,11 @@ class LevelDataStoreable : Storeable() {
         putByte("Difficulty", player.world.levelProperties.difficulty.id.toByte())
         putBoolean("DifficultyLocked", false) // not sure
 
-        put("GameRules", genGameRules(player.world.gameRules))
+        player.server?.let {
+            put("GameRules", genGameRules(player.server!!.gameRules))
+        } ?: run {
+            put("GameRules", NbtCompound())
+        }
         put("Player", NbtCompound().apply {
             player.writeNbt(this)
             remove("LastDeathLocation") // can contain sensitive information
